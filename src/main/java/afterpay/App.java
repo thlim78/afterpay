@@ -14,15 +14,27 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Map;
 
+/*
+    Why reactive ? Many reasons.
+    1. Reactive is non-blocking, asychronous, event driven, requires small number of threads to scale vertically.
+    2. It introduces back pressure mechanism, allowing subscriber to tell publisher how much data the subscriber is able to handle and process at one time.
+    3. It is already a trend, and is believed will soon be commonly applied in all applications.
+    4. Why? Because of 5G, large volume of data stream will be produced at a enourmous speed, users are expecting quicker response,
+    current conventional blocking mechanism may not serve well to meet the above requirement. Non-blocking mechanism is the way forward.
+    5. To achieve non-blocking, the apps needs to program reactively, from reactive app server (netty) to reactive repositories e.g. MongoDb.
+*/
+
 public class App {
 
     public static void main(String[] args) {
+        // validate number of arguments
         if (args.length < 2) {
             System.out.println("Usage: afterpay.App <threshold> <filename.csv>");
             System.exit(-1);
         }
 
         BigDecimal threshold = parseThreshold(args[0]);
+        // Assumption: Detect frauds based on credit card spending, not refund
         // Only accept positive threshold value
         validateThreshold(threshold);
 
@@ -38,8 +50,9 @@ public class App {
                     .getFraudulentCreditCardDetails(creditCardTransactions, threshold);
 
             fraudulentCreditCardDetails
-                    .reduce((s1, s2) -> s1 + ", " + s2)
-                    .subscribe(cardDetail -> System.out.println("The fraudulent credit card details are: " + cardDetail));
+                .defaultIfEmpty("NONE")
+                .reduce((s1, s2) -> s1 + ", " + s2)
+                .subscribe(cardDetail -> System.out.println("The fraudulent credit card details are: " + cardDetail));
         } catch (Exception e) {
             System.err.println("Exception: " + e.getMessage());
         }

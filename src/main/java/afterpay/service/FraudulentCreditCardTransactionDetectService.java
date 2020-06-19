@@ -18,28 +18,29 @@ public class FraudulentCreditCardTransactionDetectService {
         List<String> fraudulentCreditCards = new ArrayList<>();
 
         creditCardTransactions
-                .subscribe(map -> {
-            map.forEach((key, value) -> {
-                Mono<Boolean> anyFraudulentTransaction = Flux.fromIterable(value)
+            .subscribe(map -> {
+                map.forEach((key, value) -> {
+                    Mono<Boolean> anyFraudulentTransaction = Flux.fromIterable(value)
                         // sort the collection of credit card transactions based on local date time
                         .sort()
                         // determine any fraudulent transactions belonged to the hashed credit card number
                         .any(transaction -> isTransactionFraudulent(transaction, value, threshold));
 
-                anyFraudulentTransaction.subscribe(outcome -> {
-                    // report the fraudulent transactions belonged to the hashed credit card number
-                    if (outcome) {
-                        fraudulentCreditCards.add(key);
-                    }
+                    anyFraudulentTransaction.subscribe(outcome -> {
+                        // report the fraudulent transactions belonged to the hashed credit card number
+                        if (outcome) {
+                            fraudulentCreditCards.add(key);
+                        }
+                    });
                 });
             });
-        });
 
         return Flux.fromIterable(fraudulentCreditCards).sort();
     }
 
     private Boolean isTransactionFraudulent(CreditCardTransaction startTransaction, Collection<CreditCardTransaction> transactions, BigDecimal threshold ) {
         LocalDateTime startDateTime = startTransaction.getDateTime();
+        // compute end datetime from start datetime + 24 hours
         LocalDateTime endDateTime = startTransaction.getDateTime().plusHours(24);
 
         //System.out.println("Start date time: " + startDateTime);

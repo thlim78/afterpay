@@ -38,6 +38,7 @@ public class CreditCardTransactionPopulateService {
     }
 
     private Flux<String> readCreditCardTransactionFile(Path path) {
+        // read credit card transaction files per lines, and converting it to flux
         return Flux.using(() -> Files.lines(path),
                 Flux::fromStream,
                 BaseStream::close
